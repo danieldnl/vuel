@@ -76,7 +76,8 @@ class NotebookController extends Controller
      */
     public function update(Request $request, Notebook $notebook)
     {
-        //
+        $notebook->update($request->all());
+        return "success";
     }
 
     /**
@@ -87,6 +88,7 @@ class NotebookController extends Controller
      */
     public function destroy(Notebook $notebook)
     {
-        //
+        $notebook->delete();
+        return "deleted";
     }
 }

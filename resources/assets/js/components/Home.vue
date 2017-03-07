@@ -9,7 +9,7 @@
             <div class="col-md-8 col-md-offset-2">
                 <div v-if="isLoading">Loading...</div>
                 <div class="panel panel-default" v-for="notebook in notebooks">
-                    <div class="btn pull-right"><i class="fa fa-times"></i></div>
+                    <div @click="deleteIt(notebook.id)" class="btn pull-right"><i class="fa fa-times"></i></div>
                     <div @click="edit(notebook.id)" class="btn pull-right"><i class="fa fa-pencil"></i></div>
                     <form @submit.prevent="update(notebook.id)">
                         <div class="panel-heading clearfix">
@@ -20,8 +20,8 @@
                         <div class="panel-body">
                             <span v-show="!showForm(notebook.id)">{{ notebook.body }}</span>
                             <input type="text" class="form-control" v-show="showForm(notebook.id)" v-model="nbEditData.body">
-                            <div class="btn btn-primary btn-panel" v-show="showForm(notebook.id)">OK</div>
-                            <div class="btn btn-primary btn-panel" v-show="showForm(notebook.id)" @click.prevent="editForm=false">Cancel</div>
+                            <button class="btn btn-primary btn-panel" v-show="showForm(notebook.id)">OK</button>
+                            <button class="btn btn-primary btn-panel" v-show="showForm(notebook.id)" @click.prevent="editForm=false">Cancel</button>
                         </div>    
                     </form>
                 </div>
@@ -45,7 +45,13 @@
         },
         methods: {
             edit(id) {
-                this.editForm = id;
+                var self = this;
+                this.notebooks.forEach(function(notebook, i) {
+                    if(notebook.id == id) {
+                        self.nbEditData = notebook;
+                    }
+                });
+               this.editForm = id;
             },
             showForm(id) {
                 if(this.editForm === id) {
@@ -57,20 +63,34 @@
                 var self = this;
                 axios.put('/notebook/' + id, this.nbEditData).then(function(response){
                     console.log(response);
+                    self.editForm = false;
                     self.nbEditData = '';
                     self.$router.push('');
                 }).catch(function(error){
                     console.log(error.response);
                 })
+            },
+            deleteIt(id) {
+                var self = this;
+                let ok = confirm("Are you sure?");
+                if(ok) {
+                    axios.delete('/notebook/' + id).then(function(response){
+                        console.log(response);
+                        self.showAll();
+                    });
+                }
+            },
+            showAll() {
+                var self = this;
+                this.isLoading = true;
+                axios.get('/notebook').then(function(response){
+                    self.notebooks = response.data;
+                    self.isLoading = false;
+                })
             }
         },
         mounted() {
-            var self = this;
-            this.isLoading = true;
-            axios.get('/notebook').then(function(response){
-                self.notebooks = response.data;
-                self.isLoading = false;
-            })
+            this.showAll();
         }
     }
 </script>
